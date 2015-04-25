@@ -4,6 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
+import javax.xml.transform.Source;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.FileVisitResult;
@@ -21,6 +22,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+
 public class ThriftCompiler {
 
     private static String thriftBin = "/usr/local/bin/thrift";
@@ -32,11 +34,11 @@ public class ThriftCompiler {
         this.opts = opts;
     }
 
-    public List<Path> compile(URI idl) {
+    public List<SourceCode> compile(URI idl) {
         return compile(Paths.get(idl.getPath()));
     }
 
-    public List<Path> compile(Path idl) {
+    public List<SourceCode> compile(Path idl) {
         String bin = getThrift();
         // TODO verify idl...how?
 
@@ -79,7 +81,7 @@ public class ThriftCompiler {
                     return FileVisitResult.CONTINUE;
                 }
             });
-            return paths;
+            return toSourceCode(Paths.get(out), paths);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -115,6 +117,15 @@ public class ThriftCompiler {
         } catch (InterruptedException|ExecutionException|TimeoutException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private List<SourceCode> toSourceCode(Path base, List<Path> source) throws IOException {
+        List sourceCode = Lists.newArrayList();
+        for(Path p : source) {
+            sourceCode.add(new SourceCode(base, p));
+        }
+
+        return sourceCode;
     }
 
     public enum JavaOptions {
