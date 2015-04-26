@@ -11,21 +11,28 @@ import java.io.IOException;
  */
 public class JavaFileManagerImpl extends ForwardingJavaFileManager<JavaFileManager> {
 
-    private CompiledCode compiledCode;
+    //private CompiledCode compiledCode;
     private DethriftClassLoader classLoader;
 
-    public JavaFileManagerImpl(JavaFileManager fileManager, CompiledCode compiledCode,
+    public JavaFileManagerImpl(JavaFileManager fileManager, /*CompiledCode compiledCode, */
                                DethriftClassLoader classLoader) {
         super(fileManager);
-        this.compiledCode = compiledCode;
-        classLoader.addCode(compiledCode);
+        //this.compiledCode = compiledCode;
+        //classLoader.addCode(compiledCode);
         this.classLoader = classLoader;
     }
 
 
     @Override
-    public JavaFileObject getJavaFileForOutput(JavaFileManager.Location location, String className, JavaFileObject.Kind kind, FileObject sibling) throws IOException {
-        return compiledCode;
+    public JavaFileObject getJavaFileForOutput(JavaFileManager.Location location, String className,
+                                               JavaFileObject.Kind kind, FileObject sibling) throws IOException {
+        try {
+            CompiledCode compiledCode = new CompiledCode(className);
+            classLoader.addCode(compiledCode);
+            return compiledCode;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

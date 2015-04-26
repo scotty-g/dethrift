@@ -13,19 +13,19 @@ public class JavaCompiler {
 
     private static javax.tools.JavaCompiler javac = ToolProvider.getSystemJavaCompiler();
 
-    public void compile(SourceCode sourceCode) throws Exception {
+    public Class<?> compile(SourceCode sourceCode, DethriftClassLoader classLoader) throws Exception {
         List<SourceCode> compilationUnits = Arrays.asList(sourceCode);
-        CompiledCode compiledCode = new CompiledCode(sourceCode.getClassName());
-        DethriftClassLoader classLoader = new DethriftClassLoader(ClassLoader.getSystemClassLoader());
+        //DethriftClassLoader classLoader = new DethriftClassLoader(ClassLoader.getSystemClassLoader());
+        //DethriftClassLoader classLoader = new DethriftClassLoader(null);
         JavaFileManager fileManager = new JavaFileManagerImpl(
-                javac.getStandardFileManager(null, null, StandardCharsets.UTF_8),
-                compiledCode, classLoader);
+                javac.getStandardFileManager(null, null, StandardCharsets.UTF_8), classLoader);
         javax.tools.JavaCompiler.CompilationTask task =
                 javac.getTask(null, fileManager, null, null, null, compilationUnits);
         boolean status = task.call();
         if(!status) {
             throw new RuntimeException("compile failed");
         }
-        classLoader.loadClass(sourceCode.getClassName());
+
+        return classLoader.loadClass(sourceCode.getClassName());
     }
 }
