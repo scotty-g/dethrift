@@ -12,15 +12,24 @@ import java.io.IOException;
 public class JavaFileManagerImpl extends ForwardingJavaFileManager<JavaFileManager> {
 
     private CompiledCode compiledCode;
+    private DethriftClassLoader classLoader;
 
-    public JavaFileManagerImpl(JavaFileManager fileManager, CompiledCode compiledCode) {
+    public JavaFileManagerImpl(JavaFileManager fileManager, CompiledCode compiledCode,
+                               DethriftClassLoader classLoader) {
         super(fileManager);
         this.compiledCode = compiledCode;
+        classLoader.addCode(compiledCode);
+        this.classLoader = classLoader;
     }
 
 
     @Override
     public JavaFileObject getJavaFileForOutput(JavaFileManager.Location location, String className, JavaFileObject.Kind kind, FileObject sibling) throws IOException {
         return compiledCode;
+    }
+
+    @Override
+    public ClassLoader getClassLoader(Location location) {
+        return classLoader;
     }
 }
