@@ -6,19 +6,12 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import java.io.IOException;
 
-/**
- * Created by deflin39 on 4/19/15.
- */
-public class JavaFileManagerImpl extends ForwardingJavaFileManager<JavaFileManager> {
+public class DethriftJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> {
 
-    //private CompiledCode compiledCode;
     private DethriftClassLoader classLoader;
 
-    public JavaFileManagerImpl(JavaFileManager fileManager, /*CompiledCode compiledCode, */
-                               DethriftClassLoader classLoader) {
+    public DethriftJavaFileManager(JavaFileManager fileManager, DethriftClassLoader classLoader) {
         super(fileManager);
-        //this.compiledCode = compiledCode;
-        //classLoader.addCode(compiledCode);
         this.classLoader = classLoader;
     }
 

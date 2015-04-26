@@ -7,6 +7,7 @@ import org.apache.thrift.protocol.TCompactProtocol;
 import org.junit.Test;
 
 import java.io.InputStream;
+import java.net.URL;
 import java.util.List;
 
 /**
@@ -16,9 +17,8 @@ public class JavaCompilerTest {
 
     @Test
     public void test() throws Exception {
-        String fileName = "person.thrift";
-        InputStream is = getClass().getClassLoader().getResourceAsStream(fileName);
-        List<SourceCode> scs = new ThriftCompiler().compile(fileName, is);
+        URL idl = getClass().getClassLoader().getResource("person.thrift");
+        List<SourceCode> scs = new ThriftCompiler().compile(idl);
         SourceCode sc = scs.get(0);
 
         new JavaCompiler().compile(sc, null);
@@ -26,9 +26,8 @@ public class JavaCompilerTest {
 
     @Test
     public void testMore() throws Exception {
-        String fileName = "person.thrift";
-        InputStream is = getClass().getClassLoader().getResourceAsStream(fileName);
-        List<SourceCode> scs = new ThriftCompiler().compile(fileName, is);
+        URL idl = getClass().getClassLoader().getResource("person.thrift");
+        List<SourceCode> scs = new ThriftCompiler().compile(idl);
         SourceCode sc = scs.get(0);
 
         ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();

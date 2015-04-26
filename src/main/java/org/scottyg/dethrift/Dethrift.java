@@ -11,6 +11,7 @@ import org.apache.thrift.protocol.TProtocolFactory;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -18,9 +19,8 @@ import java.util.List;
 
 public class Dethrift {
 
-    public String deserialize(String fileName, InputStream idl, InputStream data,
-                              TProtocolFactory protocolFactory) throws Exception {
-        List<SourceCode> scs = new ThriftCompiler().compile(fileName, idl);
+    public String deserialize(URL idl, InputStream data, TProtocolFactory protocolFactory) throws Exception {
+        List<SourceCode> scs = new ThriftCompiler().compile(idl);
 
         ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
         DethriftClassLoader newLoader = new DethriftClassLoader(oldLoader);

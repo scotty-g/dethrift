@@ -41,6 +41,8 @@ public class Play {
 
         URI test = b;
         try(InputStream is = test.toURL().openStream()) {
+            System.out.println(test);
+            System.out.println(test.toURL());
             System.out.println(new String(ByteStreams.toByteArray(is)));
             System.out.println(test.toURL().getFile());
         }
