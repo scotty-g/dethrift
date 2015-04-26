@@ -1,6 +1,6 @@
-package org.scottyg;
+package org.scottyg.tools;
 
-import org.apache.thrift.TSerializer;
+import org.apache.thrift.TDeserializer;
 import org.apache.thrift.protocol.TCompactProtocol;
 
 import java.nio.file.Files;
@@ -9,11 +9,11 @@ import java.nio.file.Paths;
 /**
  * Created by deflin39 on 4/16/15.
  */
-public class WriteExample {
+public class ReadExample {
 
     public static void main(String[] args) {
         try {
-            new WriteExample().run();
+            new ReadExample().run();
             System.exit(0);
         } catch (Exception e) {
             e.printStackTrace();
@@ -22,14 +22,11 @@ public class WriteExample {
     }
 
     public void run() throws Exception {
-        Person p = new Person()
-                .setId(2)
-                .setFirstName("scott")
-                .setLastName("grissom");
-
         String fileName = "/home/deflin39/code/thrift/dethrift/person.dat";
-        TSerializer serializer = new TSerializer(new TCompactProtocol.Factory());
-        byte[] data = serializer.serialize(p);
-        Files.write(Paths.get(fileName), data);
+        byte[] data = Files.readAllBytes(Paths.get(fileName));
+        Person person = new Person();
+        TDeserializer deserializer = new TDeserializer(new TCompactProtocol.Factory());
+        deserializer.deserialize(person, data);
+        System.out.println(person);
     }
 }

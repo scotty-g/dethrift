@@ -1,4 +1,4 @@
-package org.scottyg;
+package org.scottyg.tools;
 
 
 import java.io.IOException;

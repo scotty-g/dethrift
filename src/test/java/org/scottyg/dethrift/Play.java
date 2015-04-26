@@ -1,14 +1,9 @@
 package org.scottyg.dethrift;
 
-import org.apache.thrift.TBase;
-import org.apache.thrift.TFieldIdEnum;
-import org.apache.thrift.meta_data.FieldMetaData;
 import org.junit.Test;
-import org.scottyg.Person;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 
 /**
  * Created by deflin39 on 4/19/15.

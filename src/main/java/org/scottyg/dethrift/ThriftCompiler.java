@@ -4,8 +4,11 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 
-import javax.xml.transform.Source;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -25,12 +28,11 @@ import java.util.concurrent.TimeoutException;
 
 public class ThriftCompiler {
 
-    private static String thriftBin = "/usr/local/bin/thrift";
-    private JavaOptions[] opts;
-    private String out;
+    private static String thriftBin = System.getProperty("thrift.compiler.bin", "/usr/local/bin/thrift");
 
-    public ThriftCompiler(String out, JavaOptions... opts) {
-        this.out = out;
+    private JavaOptions[] opts;
+
+    public ThriftCompiler(JavaOptions... opts) {
         this.opts = opts;
     }
 
@@ -39,49 +41,53 @@ public class ThriftCompiler {
     }
 
     public List<SourceCode> compile(Path idl) {
+        try {
+            return compile(idl.getFileName().toString(), new BufferedInputStream(new FileInputStream(idl.toFile())));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<SourceCode> compile(String idlName, InputStream idl) {
         String bin = getThrift();
-        // TODO verify idl...how?
+        TempDataPaths dataPaths = new TempDataPaths();
 
         try {
-            if(out == null) {
-                String ioTempDir = System.getProperty("java.io.tmpdir");
-                String baseDir = "dethrift";
-                String uuid = UUID.randomUUID().toString();
-                out = Files.createDirectories(Paths.get(ioTempDir, baseDir, uuid)).toString();
-            }
+            // write the idl to the temp data location
+            Path idlPath = Paths.get(dataPaths.in().toString(), idlName);
+            Files.copy(idl, idlPath);
 
-            // transform the enums into string options
+            // transform the option enums into string options
             List<String> optValues = Lists.transform(Arrays.asList(opts), new Function<JavaOptions, String>() {
                 public String apply(JavaOptions input) {
                     return input.get();
                 }
             });
-
             String optString = Joiner.on(',').skipNulls().join(optValues);
             optString = optString.isEmpty() ? optString : (':' + optString);
 
             // run thrift
-            String options = String.format("-v -r --gen java%s -out %s", optString, out);
-            String command = String.format("%s %s %s", bin, options, idl.toAbsolutePath().toString());
+            String options = String.format("-v -r --gen java%s -out %s", optString, dataPaths.out().toAbsolutePath());
+            String command = String.format("%s %s %s", bin, options, idlPath);
             execute(command);
 
             // return files
             final List<Path> paths = Lists.newArrayList();
-            Files.walkFileTree(Paths.get(out), new SimpleFileVisitor<Path>() {
+            Files.walkFileTree(dataPaths.out(), new SimpleFileVisitor<Path>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                        throws IOException
-                {
+                        throws IOException {
                     Objects.requireNonNull(file);
                     Objects.requireNonNull(attrs);
-                    if(file.toString().toLowerCase().endsWith(".java")) {
+                    if (file.toString().toLowerCase().endsWith(".java")) {
                         paths.add(file);
                     }
 
                     return FileVisitResult.CONTINUE;
                 }
             });
-            return toSourceCode(Paths.get(out), paths);
+
+            return toSourceCode(dataPaths.out(), paths);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -120,7 +126,7 @@ public class ThriftCompiler {
     }
 
     private List<SourceCode> toSourceCode(Path base, List<Path> source) throws IOException {
-        List sourceCode = Lists.newArrayList();
+        List<SourceCode> sourceCode = Lists.newArrayList();
         for(Path p : source) {
             sourceCode.add(new SourceCode(base, p));
         }
@@ -146,5 +152,36 @@ public class ThriftCompiler {
         }
 
         public String get() { return opt; }
+    }
+
+    private static class TempDataPaths {
+        private static final String ioTempDir = System.getProperty("java.io.tmpdir");
+        private static final String baseDir = "dethrift";
+        private final String uuid;
+        private final Path in;
+        private final Path out;
+
+        public TempDataPaths() {
+            uuid = UUID.randomUUID().toString();
+            in = create("in");
+            out = create("out");
+        }
+
+        public Path in() {
+            return in;
+        }
+
+        public Path out() {
+            return out;
+        }
+
+        private Path create(String type) {
+            // /tmp/dethrift/<uuid>/[in|out]
+            try {
+                return Files.createDirectories(Paths.get(ioTempDir, baseDir, uuid, type));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

@@ -1,9 +1,8 @@
-package org.scottyg;
+package org.scottyg.tools;
 
 import org.apache.thrift.TDeserializer;
 import org.apache.thrift.protocol.TCompactProtocol;
 
-import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -39,14 +38,14 @@ public class Compiler {
         DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
 
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        JavaFileObject obj = new SimpleJavaFileObjectImpl("org.scottyg.Person", codeContents);
+        JavaFileObject obj = new SimpleJavaFileObjectImpl("org.scottyg.tools.Person", codeContents);
 
         List<JavaFileObject> units = Arrays.asList(obj);
         JavaCompiler.CompilationTask task = compiler.getTask(null, null, diagnostics, null, null, units);
         boolean result = task.call();
         System.out.println("Compilation succeeded: " + result);
 
-        Person person = (Person) Class.forName("org.scottyg.Person").newInstance();
+        Person person = (Person) Class.forName("org.scottyg.tools.Person").newInstance();
         fileName = "/home/deflin39/code/thrift/dethrift/person.dat";
         byte[] data = Files.readAllBytes(Paths.get(fileName));
         TDeserializer deserializer = new TDeserializer(new TCompactProtocol.Factory());
