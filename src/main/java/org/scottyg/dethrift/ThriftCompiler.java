@@ -5,12 +5,8 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import org.apache.commons.io.FilenameUtils;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URL;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -38,10 +34,6 @@ public class ThriftCompiler {
         this.opts = opts;
     }
 
-//    public List<SourceCode> compile(URL idl) {
-//        return compile(Paths.get(idl.getPath()));
-//    }
-
     public List<SourceCode> compile(URL idl) {
         String bin = getThrift();
         TempDataPaths dataPaths = new TempDataPaths();
@@ -49,6 +41,7 @@ public class ThriftCompiler {
 
         try {
             // write the idl to the temp data location
+            // TODO when we have more than one idl this won't work. we will need to namespace
             Path idlPath = Paths.get(dataPaths.in().toString(), idlName);
             try(InputStream is = idl.openStream()) {
                 Files.copy(is, idlPath);

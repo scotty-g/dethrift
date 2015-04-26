@@ -7,9 +7,6 @@ import org.junit.Test;
 import java.io.InputStream;
 import java.net.URL;
 
-/**
- * Created by deflin39 on 4/26/15.
- */
 public class DethriftTest {
 
     @Test

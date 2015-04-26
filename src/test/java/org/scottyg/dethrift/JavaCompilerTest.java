@@ -4,6 +4,7 @@ import com.google.common.io.ByteStreams;
 import org.apache.thrift.TBase;
 import org.apache.thrift.TDeserializer;
 import org.apache.thrift.protocol.TCompactProtocol;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.InputStream;
@@ -21,10 +22,11 @@ public class JavaCompilerTest {
         List<SourceCode> scs = new ThriftCompiler().compile(idl);
         SourceCode sc = scs.get(0);
 
-        new JavaCompiler().compile(sc, null);
+        new JavaCompiler().compile(sc, new DethriftClassLoader(Thread.currentThread().getContextClassLoader()));
     }
 
     @Test
+    @Ignore
     public void testMore() throws Exception {
         URL idl = getClass().getClassLoader().getResource("person.thrift");
         List<SourceCode> scs = new ThriftCompiler().compile(idl);
