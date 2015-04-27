@@ -3,6 +3,7 @@ package org.scottyg.dethrift;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.IOException;
@@ -18,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -28,13 +30,28 @@ public class ThriftCompiler {
 
     private static String thriftBin = System.getProperty("thrift.compiler.bin", "/usr/local/bin/thrift");
 
-    private JavaOptions[] opts;
+    private final JavaOptions[] opts;
+    private final ConcurrentHashMap<URL, List<SourceCode>> cache;
 
     public ThriftCompiler(JavaOptions... opts) {
         this.opts = opts;
+        this.cache = new ConcurrentHashMap<>(1000);
+    }
+
+    public boolean reset(URL idl) {
+        return (cache.remove(idl)) != null;
+    }
+
+    public void resetAll() {
+        cache.clear();
     }
 
     public List<SourceCode> compile(URL idl) {
+        List<SourceCode> sc = cache.get(idl);
+        if(sc != null) {
+            return sc;
+        }
+
         String bin = getThrift();
         TempDataPaths dataPaths = new TempDataPaths();
         String idlName = FilenameUtils.getName(idl.toString());
@@ -77,7 +94,9 @@ public class ThriftCompiler {
                 }
             });
 
-            return toSourceCode(dataPaths.out(), paths);
+            sc =  toSourceCode(dataPaths.out(), paths);
+            cache.put(idl, sc);
+            return sc;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

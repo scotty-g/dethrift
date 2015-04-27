@@ -4,12 +4,13 @@ import com.google.common.base.Function;
 import com.google.common.collect.Maps;
 import org.junit.Test;
 
-import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 public class ThriftCompilerTest {
@@ -74,5 +75,39 @@ public class ThriftCompilerTest {
         URL idl = new URL("https://raw.githubusercontent.com/apache/storm/v0.9.4/storm-core/src/storm.thrift");
         List<SourceCode> scs = new ThriftCompiler().compile(idl);
         assertTrue(scs.size() == 36);
+    }
+
+    @Test
+    public void testCache() throws Exception {
+        URL idl = getClass().getClassLoader().getResource("person.thrift");
+        ThriftCompiler compiler = new ThriftCompiler();
+        List<SourceCode> scs = compiler.compile(idl);
+
+        // verify SourceCode is cached
+        for(int x = 0; x < 100; x++) {
+            List<SourceCode> cached = compiler.compile(idl);
+            assertSame(scs, cached);
+        }
+    }
+
+    @Test
+    public void testCacheRemoval() throws Exception {
+        URL idl = getClass().getClassLoader().getResource("person.thrift");
+        ThriftCompiler compiler = new ThriftCompiler();
+        List<SourceCode> sc = compiler.compile(idl);
+        compiler.reset(idl);
+        assertNotSame(sc, compiler.compile(idl));
+    }
+
+    @Test
+    public void testCacheRemovalAll() throws Exception {
+        URL personIDL = getClass().getClassLoader().getResource("person.thrift");
+        URL userIDL = getClass().getClassLoader().getResource("user.thrift");
+        ThriftCompiler compiler = new ThriftCompiler();
+        List<SourceCode> pSc = compiler.compile(personIDL);
+        List<SourceCode> uSc = compiler.compile(userIDL);
+        compiler.resetAll();
+        assertNotSame(pSc, compiler.compile(personIDL));
+        assertNotSame(uSc, compiler.compile(userIDL));
     }
 }
